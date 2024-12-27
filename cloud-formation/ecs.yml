@@ -1,0 +1,103 @@
+# https://github.com/DevOtts/CloudFormation-Docker-to-AWS-ECS-Fargate/tree/main/cloudformation
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  AWSAccountId:
+    Type: String
+    Description: AWS Account ID
+  Subnet1ID:
+    Type: String
+  Subnet2ID:
+    Type: String
+  Subnet3ID:
+    Type: String
+  Subnet4ID:
+    Type: String
+  Subnet5ID:
+    Type: String
+  Subnet6ID:
+    Type: String
+  PrefixName:
+    Type: String
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Join ["-", [!Ref PrefixName, "cluster"]]      
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join ["-", [!Ref PrefixName, "log-group"]]
+  
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: TermAssignmentSecurityGroup
+      GroupDescription: Security group for react  container
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5173
+          ToPort: 8881
+          CidrIp: 0.0.0.0/0
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Join ["-", [!Ref PrefixName, "task"]]    
+      Cpu: 1024
+      Memory: 3072
+      NetworkMode: awsvpc
+      ExecutionRoleArn: arn:aws:iam::830863794950:role/LabRole 
+      ContainerDefinitions:
+        - Name: !Join ["-", [!Ref PrefixName, "container"]]
+          Image: !Join ["", [!Ref AWSAccountId, ".dkr.ecr.",!Ref 'AWS::Region','.amazonaws.com/',!Ref PrefixName, "-","repo"]]
+          PortMappings:
+            - ContainerPort: 5173
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Ref AWS::Region
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: ecs
+      RequiresCompatibilities:
+        - EC2
+        - FARGATE
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Join ["-", [!Ref PrefixName, "service"]] 
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - !Ref Subnet1ID
+            - !Ref Subnet2ID
+            - !Ref Subnet3ID
+            - !Ref Subnet4ID
+            - !Ref Subnet5ID
+            - !Ref Subnet6ID
+          SecurityGroups:
+            - !GetAtt ContainerSecurityGroup.GroupId
+
+
+Outputs:
+  ClusterCreation:
+    Description: Cluster created successfully
+    Value: !Ref Cluster
+  LogGroupCreation:
+    Description: LogGroup created successfully
+    Value: !Ref LogGroup
+  ContainerSecurityGroupCreation:
+    Description: ContainerSecurityGroup created successfully
+    Value: !Ref ContainerSecurityGroup
+  ContainerSecurityGroupCreation:
+    Description: ContainerSecurityGroup created successfully
+    Value: !Ref ContainerSecurityGroup
+  TaskDefinitionCreation:
+    Description: TaskDefinition created successfully
+    Value: !Ref TaskDefinition
+  ServiceCreation:
+    Description: Service created successfully
+    Value: !Ref Service

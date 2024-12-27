@@ -1,0 +1,52 @@
+{
+    "Events": [
+        {
+            "PutRequest":{
+                "Item": {
+                    "event_id" : { "S": "12347"},
+                    "event_name": { "S": "Virtual Campus Tour" },
+                    "event_description": { "S": "Take a virtual tour of our campus and learn about our programs and facilities. This tour is suitable for prospective students, families, and anyone interested in learning more about our university."},
+                    "event_image": { "S": "https://cdn.dal.ca/news/2020/11/10/bringing-campus-to-the-living-room--open-house-goes-virtual/_jcr_content/image.adaptive.579.high.jpg/1605015508498.jpg"},
+                    "event_date": { "S": "15/05/2023"},
+                    "event_time": {"S": "11:30-12:30"}
+                }
+            }
+        },
+        {
+            "PutRequest":{
+                "Item": {
+                    "event_id" : { "S": "22567"},
+                    "event_name": { "S": "Career Fair" },
+                    "event_description": { "S": "Meet with employers from a variety of industries and learn about job opportunities and career paths. Bring your resume and dress professionally."},
+                    "event_image": { "S": "https://pbs.twimg.com/media/FdL01sTXoAA5m-4.jpg"},
+                    "event_date": { "S": "15/05/2023"},
+                    "event_time": {"S": "11:30-12:30"}
+                }
+            }
+        },
+        {
+            "PutRequest":{
+                "Item": {
+                    "event_id" : { "S": "31236"},
+                    "event_name": { "S": "Student Art Exhibition" },
+                    "event_description": { "S": "Join us for a showcase of our talented student artists. The exhibition features a variety of media, including painting, sculpture, and photography."},
+                    "event_image": { "S": "https://img.freepik.com/premium-vector/student-art-exhibition-flyer-design-template_262129-11943.jpg?w=2000"},
+                    "event_date": { "S": "15/05/2023"},
+                    "event_time": {"S": "11:30-12:30"}
+                }
+            }
+        },
+        {
+            "PutRequest":{
+                "Item": {
+                    "event_id" : { "S": "41234"},
+                    "event_name": { "S": "International Student Orientation" },
+                    "event_description": { "S": "If you are an international student starting your studies at our university, join us for this orientation session to learn about important information regarding visas, housing, and adjusting to life in a new country."},
+                    "event_image": { "S": "https://cdn.dal.ca/news/2020/08/27/orientation-2020--welcoming-dal-s-newest-students--remotely-and-/_jcr_content/image.adaptive.579.high.jpg/1598558018032.jpg"},
+                    "event_date": { "S": "15/05/2023"},
+                    "event_time": {"S": "11:30-12:30"}
+                }
+            }
+        }
+    ]
+}

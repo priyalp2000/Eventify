@@ -1,0 +1,36 @@
+# https://github.com/DevOtts/CloudFormation-Docker-to-AWS-ECS-Fargate/tree/main/cloudformation
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  AWSAccountId:
+    Type: String
+    Description: AWS Account ID
+  AWSECRRepoName:
+    Type: String
+    Description: ECR Repository Name
+  PrefixName:
+    Type: String
+    Description: Prefix of all of the resources
+
+Resources:
+  SimpleRepository:
+    Type: 'AWS::ECR::Repository'
+    Properties:
+      RepositoryName: !Join ["-", [!Ref PrefixName, "repo"]]
+
+  S3BucketForLambdas:
+      Type: AWS::S3::Bucket
+      DeletionPolicy: Retain
+      Properties: 
+        BucketName: s3bucketfortermassignment
+      
+Outputs:
+  SimpleECRArn:
+    Description: Your Simple ECR Repository ARN
+    Value: !Join
+      - ''
+      - - !GetAtt 
+          - SimpleRepository
+          - Arn  
+  S3BucketForLambdaCode:
+    Description: S3 Bucket for lambda code created with this template
+    Value: !Ref S3BucketForLambdas

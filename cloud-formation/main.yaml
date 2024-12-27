@@ -1,0 +1,312 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources: 
+  EventTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - 
+          AttributeName: "event_id"
+          AttributeType: "S"
+      BillingMode: PROVISIONED
+      DeletionProtectionEnabled: false
+      KeySchema: 
+        - 
+          AttributeName: "event_id"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "Events"
+      TableClass: STANDARD
+
+  UserDetailsTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - 
+          AttributeName: "user_id"
+          AttributeType: "S"
+      BillingMode: PROVISIONED
+      DeletionProtectionEnabled: false
+      KeySchema: 
+        - 
+          AttributeName: "user_id"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "UserDetails"
+      TableClass: STANDARD
+
+  SubscribedUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - 
+          AttributeName: "user_email"
+          AttributeType: "S"
+      BillingMode: PROVISIONED
+      DeletionProtectionEnabled: false
+      KeySchema: 
+        - 
+          AttributeName: "user_email"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "SubscribedUsers"
+      TableClass: STANDARD
+    
+  FetchEventDetailsLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: 
+        S3Bucket: s3bucketfortermassignment
+        S3Key: fetch_event_details.py.zip
+      FunctionName: fetch_event_details
+      Handler: fetch_event_details.lambda_handler
+      Role: arn:aws:iam::830863794950:role/LabRole
+      Runtime: python3.9
+      Timeout: 900
+  
+  FetchEventDetailsLambdaPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FetchEventDetailsLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+  RegisterForEventLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: 
+        S3Bucket: s3bucketfortermassignment
+        S3Key: register_for_event.py.zip
+      FunctionName: register_for_event
+      Handler: register_for_event.lambda_handler
+      Role: arn:aws:iam::830863794950:role/LabRole
+      Runtime: python3.9
+      Timeout: 900
+  
+  RegisterForEventLambdaPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RegisterForEventLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+  
+  SendEmailLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: 
+        S3Bucket: s3bucketfortermassignment
+        S3Key: send_email.py.zip
+      FunctionName: send_email
+      Handler: send_email.lambda_handler
+      Role: arn:aws:iam::830863794950:role/LabRole
+      Runtime: python3.9
+      Timeout: 900
+  
+  SendEmailLambdaPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref SendEmailLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+  CreateTopicInSNSLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: 
+        S3Bucket: s3bucketfortermassignment
+        S3Key: create_topic_in_sns.py.zip
+      FunctionName: create_topic_in_sns
+      Handler: create_topic_in_sns.lambda_handler
+      Role: arn:aws:iam::830863794950:role/LabRole
+      Runtime: python3.9
+      Timeout: 900
+  
+  CreateTopicInSNSLambdaPermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CreateTopicInSNSLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+
+  APIGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: API Gateway for term assignment
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+  
+  APIGatewayStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref APIGateway
+      StageName: final-deploy
+      Description: Deploy Stage
+      AutoDeploy: true
+
+  APIGatewayIntegrationWithFetchEventDetailsLambda:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref APIGateway
+      Description: Lambda Integration
+      IntegrationType: AWS_PROXY
+      IntegrationMethod: POST
+      PayloadFormatVersion: "2.0"
+      IntegrationUri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FetchEventDetailsLambda.Arn}/invocations'
+  
+  APIGatewayIntegrationWithRegisterForEventLambda:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref APIGateway
+      Description: Lambda Integration
+      IntegrationType: AWS_PROXY
+      IntegrationMethod: POST
+      PayloadFormatVersion: "2.0"
+      IntegrationUri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegisterForEventLambda.Arn}/invocations'
+
+  APIGatewayIntegrationWithCreateTopicInSNSLambda:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref APIGateway
+      Description: Lambda Integration
+      IntegrationType: AWS_PROXY
+      IntegrationMethod: POST
+      PayloadFormatVersion: "2.0"
+      IntegrationUri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateTopicInSNSLambda.Arn}/invocations'
+
+  APIGatewayRouteFetchEventDetails:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGateway
+      RouteKey: "GET /fetch-details"
+      AuthorizationType: NONE
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref APIGatewayIntegrationWithFetchEventDetailsLambda
+  
+  APIGatewayRouteRegisterForEvent:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGateway
+      RouteKey: "POST /register"
+      AuthorizationType: NONE
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref APIGatewayIntegrationWithRegisterForEventLambda
+  
+  APIGatewayRouteCreateTopicInSNS:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGateway
+      RouteKey: "POST /create-topic"
+      AuthorizationType: NONE
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref APIGatewayIntegrationWithCreateTopicInSNSLambda
+  
+  SecretManagerForCredentials:  
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Description: To store email and password
+      Name: mySecretCredentials
+      SecretString: '{"email":"passionate.pihu2000@gmail.com","password":"mqdeewwyuuomrvbg"}'
+
+  QueueToStoreMessages:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: store_messages
+      VisibilityTimeout: 900
+
+  LambdaFunctionEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 10
+      Enabled: true
+      EventSourceArn: !GetAtt QueueToStoreMessages.Arn
+      FunctionName: !GetAtt SendEmailLambda.Arn
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties: 
+      DisplayName: Topic For Subscribers
+      FifoTopic: false
+      TopicName: SubscriberForEvents
+
+Outputs:
+  EventTableCreation:
+    Description: Events table created successfully
+    Value: !Ref EventTable
+  UserDetailsTableCreation:
+    Description: UserDetails table created successfully
+    Value: !Ref UserDetailsTable
+  SubscribedUsersTableCreation:
+    Description: SubscribedUsersTable table created successfully
+    Value: !Ref SubscribedUsersTable
+  FetchEventDetailsLambdaCreation:
+    Description: fetch_event_details Lambda created successfully
+    Value: !Ref FetchEventDetailsLambda
+  FetchEventDetailsLambdaPermissionsCreation:
+    Description: FetchEventDetailsLambdaPermissions URL Permissions set successfully
+    Value: !Ref FetchEventDetailsLambdaPermissions
+  RegisterForEventLambdaCreation:
+    Description: RegisterForEventLambdaCreation Lambda created successfully
+    Value: !Ref RegisterForEventLambda
+  RegisterForEventLambdaPermissionsCreation:
+    Description: RegisterForEventLambdaPermissions URL Permissions set successfully
+    Value: !Ref RegisterForEventLambdaPermissions
+  SendEmailLambdaCreation:
+    Description: RegisterForEventLambdaCreation Lambda created successfully
+    Value: !Ref SendEmailLambda
+  SendEmailLambdaPermissionsCreation:
+    Description: SendEmailLambdaPermissions URL Permissions set successfully
+    Value: !Ref SendEmailLambdaPermissions
+  CreateTopicInSNSLambda:
+    Description: RegisterForEventLambdaCreation Lambda created successfully
+    Value: !Ref CreateTopicInSNSLambda
+  CreateTopicInSNSLambdaPermissionsCreation:
+    Description: SendEmailLambdaPermissions URL Permissions set successfully
+    Value: !Ref CreateTopicInSNSLambdaPermissions
+  APIGatewayCreation:
+    Description: API Gateway created successfully
+    Value: !Ref APIGateway
+  APIGatewayStageCreation:
+    Description: API Gateway stage created successfully
+    Value: !Ref APIGatewayStage
+  APIGatewayIntegrationWithFetchEventDetailsLambdaCreation:
+    Description: APIGatewayIntegrationWithFetchEventDetailsLambda created successfully
+    Value: !Ref APIGatewayIntegrationWithFetchEventDetailsLambda
+  APIGatewayIntegrationWithRegisterForEventLambdaCreation:
+    Description: APIGatewayIntegrationWithRegisterForEventLambda created successfully
+    Value: !Ref APIGatewayIntegrationWithRegisterForEventLambda
+  APIGatewayIntegrationWithCreateTopicInSNSLambdaCreation:
+    Description: APIGatewayIntegrationWithCreateTopicInSNSLambda created successfully
+    Value: !Ref APIGatewayIntegrationWithCreateTopicInSNSLambda
+  APIGatewayRouteRegisterForEventCreation:
+    Description: APIGatewayRouteRegisterForEvent created successfully
+    Value: !Ref APIGatewayRouteRegisterForEvent
+  SecretManagerForCredentialsCreation:
+    Description: SecretManagerForCredentials created successfully
+    Value: !Ref SecretManagerForCredentials
+  QueueToStoreMessagesCreation:
+    Description: QueueToStoreMessages created successfully
+    Value: !Ref QueueToStoreMessages
+  LambdaFunctionEventSourceMappingCreation:
+    Description: LambdaFunctionEventSourceMapping created successfully
+    Value: !Ref LambdaFunctionEventSourceMapping
+  SNSTopicCreation:
+    Description: SNSTopic created successfully
+    Value: !Ref SNSTopic

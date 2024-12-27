@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  S3BucketForLambdas:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties: 
+      AccessControl: PublicRead
+      BucketName: storelambdafunctioncloudcomputing
+
+  SetBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3BucketForLambdas
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - s3:*
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref S3BucketForLambdas
+                - /*
+            Principal: '*'
+
+Outputs:
+  S3BucketForLambdaCode:
+    Description: S3 Bucket for lambda code created with this template
+    Value: !Ref S3BucketForLambdas

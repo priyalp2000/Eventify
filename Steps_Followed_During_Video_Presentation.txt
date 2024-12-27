@@ -1,0 +1,32 @@
+Steps:
+
+
+aws cloudformation create-stack --stack-name Term-assignment-ECR --template-body file://ecr.yml --parameters file://cf-ecr.params.json --capabilities CAPABILITY_NAMED_IAM
+
+Upload .zip files of lambda code.
+
+aws cloudformation create-stack --stack-name Term-assignment-Other-Resources --template-body file://main.yaml --capabilities CAPABILITY_NAMED_IAM
+
+aws dynamodb batch-write-item --request-items file://eventDetails.json
+
+Change the link of API Gateway.
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 830863794950.dkr.ecr.us-east-1.amazonaws.com
+
+docker build -t term-assignment-repo .
+
+docker tag term-assignment-repo:latest 830863794950.dkr.ecr.us-east-1.amazonaws.com/term-assignment-repo:latest
+
+docker push 830863794950.dkr.ecr.us-east-1.amazonaws.com/term-assignment-repo:latest
+
+aws cloudformation create-stack --stack-name Term-assignment-ECS --template-body file://ecs.yml --parameters file://cf-ecs.params.json --capabilities CAPABILITY_NAMED_IAM
+
+Event Details:
+
+Name: Holi Festival
+Description: Holi is a vibrant and colorful festival that is celebrated annually in India and other parts of the world. The festival, also known as the "festival of colors," marks the arrival of spring and the triumph of good over evil. Holi is typically celebrated in March or early April, on the full moon day in the Hindu month of Phalguna.We are arranging this festival at Dalhousie.
+Date: 03/06/2023
+Time: 12:00-3:00
+URL: https://media.insider.in//image/upload/c_crop,g_custom/v1551882692/scd27ldkycso7pymo2il.jpg
+
+

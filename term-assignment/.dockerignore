@@ -1,0 +1,14 @@
+# Ignore node_modules and its subdirectories
+node_modules/
+**/node_modules
+
+# Ignore the Vite cache directory
+.cache/
+
+# Ignore other development files
+.git/
+.vscode/
+yarn-error.log
+yarn.lock
+*.log
+.DS_Store

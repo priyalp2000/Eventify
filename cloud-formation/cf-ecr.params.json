@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "AWSAccountId",
+    "ParameterValue": "830863794950"
+  },
+  {
+    "ParameterKey": "PrefixName",
+    "ParameterValue": "term-assignment"
+  },
+  {
+    "ParameterKey": "AWSECRRepoName",
+    "ParameterValue": "term-assignment-repo"
+  }
+]
